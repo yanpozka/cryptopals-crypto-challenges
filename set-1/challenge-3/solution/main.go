@@ -18,6 +18,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println(data)
 
 	r := make([]byte, len(data))
 
@@ -27,13 +28,12 @@ func main() {
 			r[ix] = data[ix] ^ k
 		}
 
-		// printing the current buffer of bytes may break the output
+		// printing the current buffer of bytes is only viable if it's the key is 1 byte
 		//
 		if isReadable(string(r)) {
 			fmt.Println(string(k), string(r))
-		} else {
-			fmt.Println(string(k))
 		}
+		// else  fmt.Println(string(k))
 	}
 }
 
@@ -45,4 +45,3 @@ func isReadable(data string) bool {
 	}
 	return true
 }
-
