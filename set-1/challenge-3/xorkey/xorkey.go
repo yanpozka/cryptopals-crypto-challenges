@@ -1,27 +1,23 @@
 package xorkey
 
 import (
-	"fmt"
+	"bytes"
 	"sort"
-	"unicode"
 )
 
 func FindSingleXORKey(block []byte) byte {
 	maxScore, key := -1, byte(0)
 
-	for k, lim := byte('A'), byte('Z'); k <= lim; k++ {
+	for k, lim := byte(' '), byte('~'); k <= lim; k++ {
 
 		pr := make([]byte, len(block))
 		for ix := range block {
 			pr[ix] = block[ix] ^ k
 		}
-		fmt.Println(pr)
 
-		if isReadable(string(pr)) {
-			if s := score(pr); s > maxScore {
-				maxScore = s
-				key = k
-			}
+		if s := score(pr); s > maxScore {
+			maxScore = s
+			key = k
 		}
 	}
 
@@ -34,24 +30,20 @@ func score(data []byte) (counter int) {
 	//
 	// more here: http://letterfrequency.org
 	//
-	// so far just counting letters and spaces
+	// so far just counting spaces
 
-	for _, b := range data {
-		if b == ' ' {
-			counter += 3
-			continue
-		}
-
-		if (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z') {
-			counter++
+	parts := bytes.Split(data, []byte(" "))
+	for _, word := range parts {
+		if !isReadable(word) {
+			return -1
 		}
 	}
 
-	return counter
+	return len(parts)
 }
-func isReadable(data string) bool {
-	for _, d := range data {
-		if !unicode.IsPrint(d) {
+func isReadable(data []byte) bool {
+	for _, b := range data {
+		if b < ' ' || b > '~' {
 			return false
 		}
 	}
