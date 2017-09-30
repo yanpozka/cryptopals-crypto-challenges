@@ -46,7 +46,7 @@ func repoxr(data []byte) {
 
 	sort.Slice(norm, func(i, j int) bool { return norm[i].val < norm[j].val })
 
-	for ix := 0; ix < 4; ix++ {
+	for ix := 0; ix < 5; ix++ {
 		tryKeySize(norm[ix].size, data)
 	}
 }
@@ -62,5 +62,5 @@ func tryKeySize(keySize int, data []byte) {
 		key = append(key, xorkey.FindSingleXORKey(block))
 	}
 
-	fmt.Println(keySize, key, len(key))
+	fmt.Printf("key size=%d key=%q %v\n", keySize, key, key)
 }

@@ -1,14 +1,13 @@
 package xorkey
 
 import (
-	"bytes"
 	"sort"
 )
 
 func FindSingleXORKey(block []byte) byte {
 	maxScore, key := -1, byte(0)
 
-	for k, lim := byte(' '), byte('~'); k <= lim; k++ {
+	for k, lim := byte(0), byte(254); k <= lim; k++ {
 
 		pr := make([]byte, len(block))
 		for ix := range block {
@@ -24,7 +23,7 @@ func FindSingleXORKey(block []byte) byte {
 	return key
 }
 
-func score(data []byte) (counter int) {
+func score(data []byte) int {
 	// e t a o i n s h r d l  u  c  m  f
 	// 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14
 	//
@@ -32,15 +31,22 @@ func score(data []byte) (counter int) {
 	//
 	// so far just counting spaces
 
-	parts := bytes.Split(data, []byte(" "))
-	for _, word := range parts {
-		if !isReadable(word) {
-			return -1
+	// parts := bytes.Split(data, []byte(" "))
+	// for _, word := range parts {
+	// 	if !isReadable(word) {
+	// 		return -1
+	// 	}
+	// }
+	// return len(parts)
+	var c int
+	for ix := range data {
+		if data[ix] == ' ' {
+			c++
 		}
 	}
-
-	return len(parts)
+	return c
 }
+
 func isReadable(data []byte) bool {
 	for _, b := range data {
 		if b < ' ' || b > '~' {
