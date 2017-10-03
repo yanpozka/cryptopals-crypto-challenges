@@ -1,50 +1,68 @@
+//
+// Idea taken from  https://github.com/FiloSottile/mostly-harmless/blob/master/cryptopals/set1.go
+//
 package xorkey
 
 import (
+	"bufio"
+	"io"
+	"os"
 	"sort"
 )
 
-func FindSingleXORKey(block []byte) byte {
-	maxScore, key := -1, byte(0)
+var freqs = loadData()
 
-	for k, lim := byte(0), byte(254); k <= lim; k++ {
+func loadData() map[byte]float64 {
+	f1, err := os.Open("834-0.txt")
+	if err != nil {
+		panic(err)
+	}
+	f2, err := os.Open("pg128.txt")
+	if err != nil {
+		panic(err)
+	}
+
+	freq := map[byte]float64{}
+	reader := bufio.NewReader(io.MultiReader(f1, f2))
+
+	for b, err := reader.ReadByte(); err == nil; b, err = reader.ReadByte() {
+		freq[b]++
+	}
+
+	return freq
+}
+
+func FindSingleXORKey(block []byte) (key byte, dec []byte) {
+	var maxScore float64
+
+	for k, lim := 0, 255; k <= lim; k++ {
 
 		pr := make([]byte, len(block))
 		for ix := range block {
-			pr[ix] = block[ix] ^ k
+			pr[ix] = block[ix] ^ byte(k)
 		}
 
 		if s := score(pr); s > maxScore {
 			maxScore = s
-			key = k
+			key = byte(k)
+			dec = pr
 		}
 	}
 
-	return key
+	return
 }
 
-func score(data []byte) int {
+func score(data []byte) float64 {
 	// e t a o i n s h r d l  u  c  m  f
 	// 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14
 	//
 	// more here: http://letterfrequency.org
-	//
-	// so far just counting spaces
 
-	// parts := bytes.Split(data, []byte(" "))
-	// for _, word := range parts {
-	// 	if !isReadable(word) {
-	// 		return -1
-	// 	}
-	// }
-	// return len(parts)
-	var c int
-	for ix := range data {
-		if data[ix] == ' ' {
-			c++
-		}
+	var s float64
+	for _, b := range data {
+		s += freqs[b]
 	}
-	return c
+	return s / float64(len(freqs))
 }
 
 func isReadable(data []byte) bool {

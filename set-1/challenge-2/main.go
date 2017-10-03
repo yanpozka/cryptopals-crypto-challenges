@@ -16,8 +16,11 @@ func main() {
 	)
 
 	data, err := xor(a, b)
+	if err != nil {
+		panic(err)
+	}
 
-	fmt.Println(hex.EncodeToString(data), string(data), err)
+	fmt.Printf("is true? %v %q\n", hex.EncodeToString(data) == "746865206b696420646f6e277420706c6179", string(data))
 }
 
 func xor(a, b string) ([]byte, error) {

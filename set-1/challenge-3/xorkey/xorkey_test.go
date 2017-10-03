@@ -11,6 +11,7 @@ func TestFindSingleXORKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	key, text := FindSingleXORKey(data)
 
-	t.Logf("%q", string(FindSingleXORKey(data)))
+	t.Logf("key: %q original text: %q", key, text)
 }
