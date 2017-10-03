@@ -20,9 +20,7 @@ func main() {
 		panic(err)
 	}
 
-	dr := base64.NewDecoder(base64.StdEncoding, bufio.NewReader(f))
-	// _, err = ioutil.ReadAll(dr)
-	data, err := ioutil.ReadAll(dr)
+	data, err := ioutil.ReadAll(base64.NewDecoder(base64.StdEncoding, bufio.NewReader(f)))
 	if err != nil {
 		panic(err)
 	}
@@ -40,27 +38,36 @@ func repoxr(data []byte) {
 	norm := make([]pair, 0, 40)
 
 	for keySize := 2; keySize <= 40; keySize++ {
-		a, b := data[:keySize], data[keySize+1:(keySize*2)%len(data)]
-		norm = append(norm, pair{size: keySize, val: float64(hammingDistStr(a, b)) / float64(keySize)})
+		a, b := data[:keySize*4], data[keySize*4:(keySize*8)%len(data)]
+
+		norm = append(norm, pair{size: keySize, val: float64(hammingDistStr(a, b)) / float64(keySize*4)})
 	}
 
 	sort.Slice(norm, func(i, j int) bool { return norm[i].val < norm[j].val })
 
-	for ix := 0; ix < 5; ix++ {
-		tryKeySize(norm[ix].size, data)
+	// for ix := 0; ix < 3; ix++ {
+	key := tryKeySize(norm[0].size, data)
+	// }
+
+	for ix := range data {
+		data[ix] ^= key[ix%len(key)]
 	}
+
+	fmt.Println("\n", string(data))
 }
 
-func tryKeySize(keySize int, data []byte) {
-	var key []byte
+func tryKeySize(keySize int, data []byte) (key []byte) {
 
 	for k := 0; k < keySize; k++ {
 		var block []byte
 		for ix := k; ix < len(data); ix += keySize {
 			block = append(block, data[ix])
 		}
-		key = append(key, xorkey.FindSingleXORKey(block))
+
+		k, _, _ := xorkey.FindSingleXORKey(block)
+		key = append(key, k)
 	}
 
-	fmt.Printf("key size=%d key=%q %v\n", keySize, key, key)
+	fmt.Printf("key size= %d key= %q \n", keySize, key)
+	return
 }

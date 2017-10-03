@@ -13,11 +13,11 @@ import (
 var freqs = loadData()
 
 func loadData() map[byte]float64 {
-	f1, err := os.Open("834-0.txt")
+	f1, err := os.Open(os.Getenv("GOPATH") + "/src/github.com/yanpozka/cryptopals-crypto-challenges/set-1/challenge-3/xorkey/834-0.txt")
 	if err != nil {
 		panic(err)
 	}
-	f2, err := os.Open("pg128.txt")
+	f2, err := os.Open(os.Getenv("GOPATH") + "/src/github.com/yanpozka/cryptopals-crypto-challenges/set-1/challenge-3/xorkey/pg128.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -32,8 +32,7 @@ func loadData() map[byte]float64 {
 	return freq
 }
 
-func FindSingleXORKey(block []byte) (key byte, dec []byte) {
-	var maxScore float64
+func FindSingleXORKey(block []byte) (key byte, dec []byte, maxScore float64) {
 
 	for k, lim := 0, 255; k <= lim; k++ {
 

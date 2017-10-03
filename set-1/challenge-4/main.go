@@ -8,37 +8,33 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
-	"unicode"
+
+	"github.com/yanpozka/cryptopals-crypto-challenges/set-1/challenge-3/xorkey"
 )
 
 func main() {
+	var text []byte
+	var maxScore float64
+
 	for _, str := range strings.Split(src, "\n") {
-		doStuff(str)
-	}
-}
-
-func doStuff(s string) {
-	data, err := hex.DecodeString(s)
-	if err != nil {
-		panic(err)
-	}
-
-	r := make([]byte, len(data))
-
-	for k, lim := byte('A'), byte('Z'); k <= lim; k++ {
-		for ix := range data {
-			r[ix] = data[ix] ^ k
+		data, err := hex.DecodeString(str)
+		if err != nil {
+			panic(err)
 		}
 
-		if isReadable(string(r)) {
-			fmt.Println(string(k), string(r))
+		_, dec, s := xorkey.FindSingleXORKey(data)
+		if s > maxScore {
+			maxScore = s
+			text = dec
 		}
 	}
+
+	fmt.Printf("%v", string(text))
 }
 
-func isReadable(data string) bool {
-	for _, d := range data {
-		if !unicode.IsPrint(d) {
+func isReadable(data []byte) bool {
+	for _, b := range data {
+		if b < ' ' || b > '~' {
 			return false
 		}
 	}
