@@ -67,3 +67,9 @@ func TestECBModeCh10(t *testing.T) {
 
 	t.Logf("%v\n", string(dec))
 }
+
+func TestDetectECBOrBCBMode(t *testing.T) {
+	const text = "and and and and and and party beautiful bullshit with this and and and and and and and and that."
+
+	t.Logf("%#v", encryptionOracle([]byte(text)))
+}
