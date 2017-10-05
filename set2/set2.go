@@ -128,3 +128,23 @@ func encryptionOracle(in []byte) []byte {
 	println("CBC mode")
 	return encryptCBCMode(data, iv, cipherAES)
 }
+
+func isECBMode(data []byte) ([]byte, bool) {
+	blocks := make(map[string]struct{})
+
+	for ix := 0; ix < len(data); ix += 16 {
+		end := ix + 16
+		if end > len(data) {
+			end = len(data)
+		}
+
+		cb := string(data[ix:end])
+		if _, contains := blocks[cb]; contains {
+			return []byte(cb), true
+		}
+
+		blocks[cb] = struct{}{}
+	}
+
+	return nil, false
+}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"encoding/base64"
+	"encoding/hex"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -68,8 +69,12 @@ func TestECBModeCh10(t *testing.T) {
 	t.Logf("%v\n", string(dec))
 }
 
-func TestDetectECBOrBCBMode(t *testing.T) {
-	const text = "and and and and and and party beautiful bullshit with this and and and and and and and and that."
+func TestDetectECBOrBCBModeCh11(t *testing.T) {
+	data := encryptionOracle(bytes.Repeat([]byte{'A'}, 100))
 
-	t.Logf("%#v", encryptionOracle([]byte(text)))
+	if duplicatedBlock, isECB := isECBMode(data); isECB {
+		t.Logf("ECB mode detected on duplicated block:\n%v", hex.Dump(duplicatedBlock))
+	} else {
+		t.Log("Isn't ECB so it should be CBC :(")
+	}
 }
