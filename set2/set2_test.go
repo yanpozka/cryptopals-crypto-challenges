@@ -70,11 +70,19 @@ func TestECBModeCh10(t *testing.T) {
 }
 
 func TestDetectECBOrBCBModeCh11(t *testing.T) {
-	data := encryptionOracle(bytes.Repeat([]byte{'A'}, 100))
+	data := encryptionOracle(bytes.Repeat([]byte{'A'}, 100), true)
 
 	if duplicatedBlock, isECB := isECBMode(data); isECB {
 		t.Logf("ECB mode detected on duplicated block:\n%v", hex.Dump(duplicatedBlock))
 	} else {
 		t.Log("Isn't ECB so it should be CBC :(")
 	}
+}
+
+func TestDecryptByteByByteECBCh12(t *testing.T) {
+	text := bytes.Repeat([]byte("A"), 100)
+
+	in := encrypOracleWithConstKey(text)
+
+	decryptUnknownStrECB(in)
 }

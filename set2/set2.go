@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/base64"
 	mathRand "math/rand"
 	"time"
 )
@@ -94,15 +95,18 @@ func encryptECBMode(data []byte, cb cipher.Block) []byte {
 	return buff.Bytes()
 }
 
-func encryptionOracle(in []byte) []byte {
+func encryptionOracle(in []byte, random bool) []byte {
 	mathRand.Seed(time.Now().UnixNano())
 
 	key := make([]byte, aes.BlockSize)
 	rand.Read(key)
 
+	return _encryptionOracle(in, key, random)
+}
+
+func _encryptionOracle(in, key []byte, random bool) []byte {
 	extra := make([]byte, mathRand.Intn(5)+5)
 	rand.Read(extra)
-	println("extra prefix and suffix len: ", len(extra))
 
 	buff := new(bytes.Buffer)
 	buff.Write(extra)
@@ -112,20 +116,18 @@ func encryptionOracle(in []byte) []byte {
 	data := buff.Bytes()
 
 	cipherAES, err := aes.NewCipher(key)
-	if err != nil {
-		panic(err)
-	}
+	panicIfErr(err)
 
 	// ECB mode
-	if mathRand.Intn(2) == 0 {
-		println("ECB mode")
+	if random == false || mathRand.Intn(2) == 0 {
+		// println("ECB mode")
 		return encryptECBMode(data, cipherAES)
 	}
 
 	// CBC mode
 	iv := make([]byte, aes.BlockSize)
 	rand.Read(iv)
-	println("CBC mode")
+	// println("CBC mode")
 	return encryptCBCMode(data, iv, cipherAES)
 }
 
@@ -147,4 +149,43 @@ func isECBMode(data []byte) ([]byte, bool) {
 	}
 
 	return nil, false
+}
+
+// challenge 12
+
+//
+// AES-128-ECB(your-string || unknown-string, random-key)
+//
+func encrypOracleWithConstKey(in []byte) []byte {
+	const (
+		key   = "Summer Time live"
+		extra = `Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkg
+aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq
+dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg
+YnkK`
+	)
+
+	decB64, err := base64.StdEncoding.DecodeString(extra)
+	panicIfErr(err)
+
+	return _encryptionOracle(append(in, decB64...), []byte(key), false)
+}
+
+func panicIfErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+// decrypts "unknown-string" from function above
+func decryptUnknownStrECB(in []byte) []byte {
+	// 1. Feed identical bytes of your-string to the function, 1 at a time - start with 1 byte "A", then "AA", then "AAA" and so on.
+	//    Discover the block size of the cipher.
+
+	// 2. Detect that the function is using ECB.
+	if _, isECB := isECBMode(in); !isECB {
+		panic("not ECB mode. WTF!")
+	}
+
+	return nil
 }
