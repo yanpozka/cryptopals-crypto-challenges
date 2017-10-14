@@ -6,7 +6,9 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	mathRand "math/rand"
+	"net/url"
 	"time"
 )
 
@@ -20,8 +22,7 @@ func addPadding(data []byte, size int) []byte {
 	result := make([]byte, len(data))
 	copy(result, data)
 
-	result = append(result, bytes.Repeat([]byte{byte(size)}, size)...)
-	return result
+	return append(result, bytes.Repeat([]byte{byte(size)}, size)...)
 }
 
 // challenge 10
@@ -179,13 +180,79 @@ func panicIfErr(err error) {
 
 // decrypts "unknown-string" from function above
 func decryptUnknownStrECB(in []byte) []byte {
+	// TODO:
 	// 1. Feed identical bytes of your-string to the function, 1 at a time - start with 1 byte "A", then "AA", then "AAA" and so on.
 	//    Discover the block size of the cipher.
+	//
+	const blockSize = aes.BlockSize
 
 	// 2. Detect that the function is using ECB.
 	if _, isECB := isECBMode(in); !isECB {
 		panic("not ECB mode. WTF!")
 	}
 
+	// 3. Knowing the block size, craft an input block that is exactly 1 byte short.
+	input := bytes.Repeat([]byte("A"), blockSize)
+	println(input)
+	// TODO:
+	// 4. Make a dictionary of every possible last byte by feeding different strings to the oracle,
+	//    remembering the first block of each invocation
+
+	// TODO:
+	// 5. Match the output of the one-byte-short input to one of the entries in your dictionary. You've now discovered the first byte of unknown-string ??
+
+	// TODO:
+	// 6. Repeat for the next byte.
+
 	return nil
+}
+
+// challenge 13
+
+var userIDCounter int
+
+func profileFor(email string) string {
+	userIDCounter++
+
+	v := url.Values{}
+	v.Set("email", email)
+	v.Set("uid", fmt.Sprintf("%d", userIDCounter))
+	v.Set("role", "user")
+
+	return v.Encode()
+}
+
+func decodeProfile(encoded string) url.Values {
+	v, err := url.ParseQuery(encoded)
+	panicIfErr(err)
+	return v
+}
+
+func encryptProfile(encoded string) (key, cipherTxt []byte) {
+	key = make([]byte, aes.BlockSize)
+	rand.Read(key)
+
+	cipherAES, err := aes.NewCipher(key)
+	panicIfErr(err)
+
+	cipherTxt = encryptECBMode([]byte(encoded), cipherAES)
+	return
+}
+
+// copied from challenge 7
+func decryptAESECBMode(key, data []byte) []byte {
+	cipher, err := aes.NewCipher(key)
+	panicIfErr(err)
+
+	dst := make([]byte, aes.BlockSize)
+	buff := new(bytes.Buffer)
+
+	for ix := 0; ix < len(data); ix += aes.BlockSize {
+		cipher.Decrypt(dst, data[ix:ix+aes.BlockSize])
+
+		_, err := buff.Write(dst)
+		panicIfErr(err)
+	}
+
+	return buff.Bytes()
 }

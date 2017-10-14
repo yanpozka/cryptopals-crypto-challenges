@@ -86,3 +86,16 @@ func TestDecryptByteByByteECBCh12(t *testing.T) {
 
 	decryptUnknownStrECB(in)
 }
+
+func TestECBCutPasteCh13(t *testing.T) {
+	const email = "foo@bar.com"
+
+	key, cipherTxt := encryptProfile(profileFor(email))
+
+	v := decodeProfile(string(decryptAESECBMode(key, cipherTxt)))
+
+	if v.Get("email") != email {
+		t.Fatalf("decrypted email: %q != original email: %q")
+	}
+	t.Logf("%#v", v)
+}
